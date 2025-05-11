@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="SHIRONO LABO 印象診断", layout="centered")
 
 # ロゴ画像表示
-st.image("https://raw.githubusercontent.com/yorifuji7/shirono-labo/main/whiteninglabo_shirono_logo.jpg", width=300)
+st.image("shirono_labo_logo_web.jpg", width=300)
 
 # タイトル
 st.markdown("<h2 style='text-align: center; color: #000000;'>SHIRONO LABO 印象診断</h2>", unsafe_allow_html=True)
