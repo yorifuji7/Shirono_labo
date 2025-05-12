@@ -1,2 +1,2 @@
 # Shirono_labo
-SHIRONO LABO 印象診断アプリ
+City Whitening 印象診断
