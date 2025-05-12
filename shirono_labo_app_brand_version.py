@@ -87,7 +87,8 @@ if submitted:
     st.write(f"見た目年齢：実年齢 {age} → {visual_age} 歳")
 
     # グラフ表示
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots()import matplotlib
+matplotlib.rcParams['font.family'] = 'IPAexGothic'  # 日本語フォントを指定
     ax.barh(["清潔感レベル", "ホワイトニング緊急性", "メンテナンス必要度"],
             [cleanliness, urgency, maintenance], color='skyblue')
     ax.set_xlim(0, 10)
