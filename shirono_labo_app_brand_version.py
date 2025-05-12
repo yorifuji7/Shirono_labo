@@ -97,44 +97,74 @@ if submitted:
     st.write(f"選択された歯のトーン: {tone_selected}（スコア: {tone_score}）")
     st.write(f"見た目年齢：実年齢 {age} → {visual_age} 歳")
 
-    # 棒グラフ（Plotly 横）
-    chart_data = pd.DataFrame({
-        "項目": ["清潔感", "緊急性", "メンテ必要性"],
-        "スコア": [cleanliness, urgency, maintenance]
-    })
-    fig = px.bar(chart_data, x="スコア", y="項目", orientation="h", range_x=[0,10], text="スコア")
-    fig.update_traces(marker_color='skyblue', textposition='outside')
-    fig.update_layout(xaxis_title="10段階評価", yaxis_title="", height=400)
-    st.plotly_chart(fig)
+    # カラースケール定義（赤→青）
+    def get_color_scale(n):
+        return [
+            f"rgba({int(255 - (i / (n - 1)) * 255)}, {int((i / (n - 1)) * 128)}, {int((i / (n - 1)) * 255)}, 1)"
+            for i in range(n)
+        ]
 
-    # トーン位置可視化バー（グラデーション）
+    # 横ゲージ：清潔感、緊急性、メンテ必要性
+    def render_score_bar(label, value):
+        colors = get_color_scale(10)
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=list(range(1, 11)),
+            y=[1] * 10,
+            marker_color=colors,
+            hoverinfo='x',
+            showlegend=False,
+            width=0.8,
+            text=[str(i) for i in range(1, 11)],
+            textposition="outside",
+            textfont=dict(color="black", size=16)
+        ))
+        fig.add_trace(go.Scatter(
+            x=[value],
+            y=[1.1],
+            mode="markers",
+            marker=dict(color="black", size=14),
+            showlegend=False
+        ))
+        fig.update_layout(
+            height=130,
+            title=dict(text=label, font=dict(color="black", size=20)),
+            xaxis=dict(range=[0, 11], tickmode="linear", dtick=1, title="", color="black"),
+            yaxis=dict(visible=False),
+            margin=dict(l=40, r=40, t=40, b=30)
+        )
+        st.plotly_chart(fig)
+
+    render_score_bar("清潔感", cleanliness)
+    render_score_bar("緊急性", urgency)
+    render_score_bar("メンテ必要性", maintenance)
+
+    # トーンレベル表示バー
     st.markdown("### あなたのトーンレベル")
     tone_levels = list(range(1, 26))
-    tone_colors = [
-        f"rgba({int(0 + (c/24)*180)}, {int(120 + (c/24)*80)}, {int(255 - (c/24)*155)}, 0.9)"
-        for c in range(25)
-    ]
+    tone_colors = get_color_scale(25)
     fig_tone = go.Figure()
     fig_tone.add_trace(go.Bar(
         x=tone_levels,
-        y=[1]*25,
+        y=[1] * 25,
         marker_color=tone_colors,
         hoverinfo='x',
         showlegend=False,
         width=0.8,
+        text=[str(i) for i in tone_levels],
+        textposition="outside",
+        textfont=dict(color="black", size=16)
     ))
     fig_tone.add_trace(go.Scatter(
         x=[tone_score],
-        y=[1.2],
-        mode="markers+text",
-        marker=dict(color="red", size=12),
-        text=[f"あなたの位置: {tone_score}/25"],
-        textposition="top center",
+        y=[1.1],
+        mode="markers",
+        marker=dict(color="black", size=14),
         showlegend=False
     ))
     fig_tone.update_layout(
-        height=200,
-        xaxis=dict(title="トーンレベル（明るい→暗い）", tickmode="linear", dtick=1),
+        height=160,
+        xaxis=dict(title="トーンレベル（明るい→暗い）", tickmode="linear", dtick=1, color="black"),
         yaxis=dict(visible=False),
         margin=dict(l=40, r=40, t=30, b=30)
     )
