@@ -1,4 +1,10 @@
+import streamlit as st
 
+# GitHubにアップしたロゴ画像のURL（すでに正しい形になってる）
+logo_url = "https://github.com/yorifuji7/Shirono_labo/blob/main/city_whitening_logo.jpg?raw=true"
+
+# アプリ上にロゴ画像を表示
+st.image(logo_url, caption="シティホワイトニングのロゴ", use_column_width=True)
 import streamlit as st
 import matplotlib.pyplot as plt
 
