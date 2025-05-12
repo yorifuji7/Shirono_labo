@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 import time
 
 # ページ設定
@@ -72,10 +73,12 @@ if submitted:
     tone_score = tone_score_map[tone_selected]
     age_offset = tone_to_age_offset(tone_score)
     visual_age = age + age_offset
-    cleanliness = max(1, 11 - round(tone_score / 2.5))
-    urgency = min(10, round(tone_score / 2.5))
+
+    # 線形に10段階スケーリング（より滑らかに）
+    cleanliness = max(1, round(10 - tone_score * 10 / 25))
+    urgency = min(10, round(tone_score * 10 / 25))
     correct = sum([1 for q, a in responses.items() if a == question_map[q]])
-    maintenance = 10 - (correct * 2)
+    maintenance = max(1, min(10, 10 - (correct * 2)))
 
     avg_score = round((cleanliness + (10 - urgency) + (10 - maintenance)) / 3)
     if avg_score >= 9:
@@ -93,12 +96,15 @@ if submitted:
     st.write(f"選択された歯のトーン: {tone_selected}（スコア: {tone_score}）")
     st.write(f"見た目年齢：実年齢 {age} → {visual_age} 歳")
 
+    # Plotlyで横棒グラフ
     chart_data = pd.DataFrame({
-        "項目": ["清潔感レベル", "ホワイトニング緊急性", "メンテナンス必要度"],
+        "項目": ["清潔感", "緊急性", "メンテ必要性"],
         "スコア": [cleanliness, urgency, maintenance]
-    }).set_index("項目")
-
-    st.bar_chart(chart_data)
+    })
+    fig = px.bar(chart_data, x="スコア", y="項目", orientation="h", range_x=[0,10], text="スコア")
+    fig.update_traces(marker_color='skyblue', textposition='outside')
+    fig.update_layout(xaxis_title="10段階評価", yaxis_title="", height=400)
+    st.plotly_chart(fig)
 
     st.markdown(f"### 総合評価ランク：{rank}")
     st.info(advice_comments[rank])
