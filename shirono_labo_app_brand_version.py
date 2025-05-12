@@ -1,17 +1,6 @@
 import streamlit as st
-import matplotlib.pyplot as plt
-import matplotlib
+import pandas as pd
 import time
-from matplotlib import font_manager
-import os
-
-# ✅ 日本語フォント読み込み（fonts フォルダに .otf ファイルがある前提）
-font_path = os.path.join("fonts", "NotoSansCJKjp-Regular.otf")
-if os.path.exists(font_path):
-    font_prop = font_manager.FontProperties(fname=font_path)
-    matplotlib.rcParams['font.family'] = font_prop.get_name()
-else:
-    st.warning("⚠️ フォントファイルが見つかりません。日本語が文字化けする可能性があります。")
 
 # ページ設定
 st.set_page_config(page_title="第一印象トーン診断", layout="centered")
@@ -104,17 +93,17 @@ if submitted:
     st.write(f"選択された歯のトーン: {tone_selected}（スコア: {tone_score}）")
     st.write(f"見た目年齢：実年齢 {age} → {visual_age} 歳")
 
-    fig, ax = plt.subplots()
-    ax.barh(["清潔感レベル", "ホワイトニング緊急性", "メンテナンス必要度"],
-            [cleanliness, urgency, maintenance], color='skyblue')
-    ax.set_xlim(0, 10)
-    ax.set_xlabel("10段階評価")
-    st.pyplot(fig)
+    chart_data = pd.DataFrame({
+        "項目": ["清潔感レベル", "ホワイトニング緊急性", "メンテナンス必要度"],
+        "スコア": [cleanliness, urgency, maintenance]
+    }).set_index("項目")
+
+    st.bar_chart(chart_data)
 
     st.markdown(f"### 総合評価ランク：{rank}")
     st.info(advice_comments[rank])
 
     st.markdown("### \U0001F4E9 診断結果をLINEで送りたい方はこちら")
-    line_url = "https://lin.ee/E2rHbd6"  # ご自身のLINE公式URLに差し替えてください
+    line_url = "https://lin.ee/xxxxxxxx"  # ご自身のLINE公式URLに差し替えてください
     if st.button("LINEで診断結果を送る"):
         st.markdown(f'<meta http-equiv="refresh" content="0; URL={line_url}">', unsafe_allow_html=True)
