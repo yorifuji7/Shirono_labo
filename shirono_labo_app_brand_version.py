@@ -1,6 +1,8 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import time
+import matplotlib
+matplotlib.rcParams['font.family'] = 'IPAexGothic'
 
 # ページ設定
 st.set_page_config(page_title="WST印象診断", layout="centered")
