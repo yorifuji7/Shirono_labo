@@ -23,9 +23,9 @@ tone_score_map = {
 def tone_to_age_offset(score):
     return (score - 13) // 3
 
-def get_color_scale(n):
+def get_color_scale_gray_to_blue(n):
     return [
-        f"rgba({int(255 - (i / (n - 1)) * 255)}, {int((i / (n - 1)) * 128)}, {int((i / (n - 1)) * 255)}, 1)"
+        f"rgba({int(180 - (i / (n - 1)) * 100)}, {int(180 - (i / (n - 1)) * 100)}, {int(200 + (i / (n - 1)) * 55)}, 1)"
         for i in range(n)
     ]
 
@@ -40,6 +40,14 @@ question_map = {
     "最近「疲れてる？」と言われることがありますか？": "いいえ",
     "歯を見せて笑うことに抵抗がありますか？": "いいえ",
     "初対面での印象を意識してケアしていますか？": "はい"
+}
+
+advice_comments = {
+    "S": "素晴らしい！誰もがうらやむ美しい歯をお持ちですね。でも、油断は禁物です。\n放っておくと少しずつ着色していってしまうので、月1回のメンテナンスで清潔感をキープしましょう！",
+    "A": "とても好印象な口元です！この清潔感をキープするためにも、月一回のメンテナンスを忘れずに！\n放っておくと着色してトーンが落ちてきてしまいます。綺麗な白い歯を大事にしてくださいね！",
+    "B": "もう一息で理想的な印象に近づけます！期間を空けずに数回のケアをしてあげれば、もうワンランク上の自分になれます。\n逆にトーンダウンしやすい状態でもあるので、放っておくのは要注意です！",
+    "C": "人から見たあなたの印象に悪影響が出ている可能性があります！仕事やプライベートで損をしているかもしれません。\n気になりはじめた今こそ、集中的なケアをして印象改善に取り組みましょう！",
+    "D": "緊急ケアが必要な状態です！あなたの印象が実際より悪く見えてしまっている可能性があります。\n口元の印象のせいで色んな努力がプラマイゼロになってしまうことも...。\nでも、諦めることはありません！集中的なケアで見違えるほど印象をアップできます！"
 }
 
 st.title("第一印象トーン診断")
@@ -65,7 +73,18 @@ if submitted:
     correct = sum([1 for q, a in responses.items() if a == question_map[q]])
     maintenance = max(1, min(10, 10 - (correct * 2)))
 
-    # 新項目スコア
+    avg_score = round((cleanliness + (10 - urgency) + (10 - maintenance)) / 3)
+    if avg_score >= 9:
+        rank = "S"
+    elif avg_score >= 7:
+        rank = "A"
+    elif avg_score >= 5:
+        rank = "B"
+    elif avg_score >= 3:
+        rank = "C"
+    else:
+        rank = "D"
+
     first_impression = sum([responses[q] == question_map[q] for q in [
         "面接や商談などで第一印象を気にすることが多いですか？",
         "初対面での印象を意識してケアしていますか？"
@@ -79,31 +98,31 @@ if submitted:
         "歯を見せて笑うことに抵抗がありますか？"]]) + (tone_score > 15)
 
     def render_score_bar(label, value, max_value=10):
-        colors = get_color_scale(max_value)
+        colors = get_color_scale_gray_to_blue(max_value)
         fig = go.Figure()
         fig.add_trace(go.Bar(
             x=list(range(1, max_value + 1)),
-            y=[1] * max_value,
+            y=[0.6] * max_value,
             marker_color=colors,
-            width=0.8,
-            text=[str(i) for i in range(1, max_value + 1)],
-            textposition="outside",
-            textfont=dict(color="black", size=16),
+            width=0.4,
             showlegend=False
         ))
         fig.add_trace(go.Scatter(
             x=[value],
-            y=[1.1],
-            mode="markers",
-            marker=dict(color="black", size=14),
+            y=[0.7],
+            mode="markers+text",
+            marker=dict(color="red", size=18, symbol="diamond"),
+            text=[f"← あなたの位置: {value}"],
+            textposition="top center",
+            textfont=dict(size=14, color="black"),
             showlegend=False
         ))
         fig.update_layout(
-            height=130,
+            height=120,
             title=dict(text=label, font=dict(color="black", size=20)),
             xaxis=dict(range=[0, max_value + 1], tickmode="linear", dtick=1, color="black"),
             yaxis=dict(visible=False),
-            margin=dict(l=40, r=40, t=40, b=30)
+            margin=dict(l=40, r=40, t=40, b=20)
         )
         st.plotly_chart(fig)
 
@@ -116,3 +135,6 @@ if submitted:
     render_score_bar("商談・面接での第一印象レベル", first_impression * 5)
     render_score_bar("恋愛魅力レベル", love_score * 5)
     render_score_bar("損してるレベル", damage_score * 3)
+
+    st.markdown(f"### 総合評価ランク：{rank}")
+    st.info(advice_comments[rank])
