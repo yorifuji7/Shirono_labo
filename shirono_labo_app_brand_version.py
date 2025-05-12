@@ -1,15 +1,22 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import matplotlib  # ← 日本語フォント設定用
+import matplotlib
 import time
+from matplotlib import font_manager
+import os
 
-# ✅ 日本語文字化け対策（使用可能な日本語フォントを指定）
-matplotlib.rcParams['font.family'] = 'IPAexGothic'
+# ✅ 日本語フォント読み込み（fonts フォルダに .otf ファイルがある前提）
+font_path = os.path.join("fonts", "NotoSansCJKjp-Regular.otf")
+if os.path.exists(font_path):
+    font_prop = font_manager.FontProperties(fname=font_path)
+    matplotlib.rcParams['font.family'] = font_prop.get_name()
+else:
+    st.warning("⚠️ フォントファイルが見つかりません。日本語が文字化けする可能性があります。")
 
 # ページ設定
 st.set_page_config(page_title="第一印象トーン診断", layout="centered")
 
-# 歯のトーン → スコアマップ
+# トーンスコアマッピング（25トーン）
 tone_score_map = {
     "1M-1": 1, "1M-2": 2,
     "2L-1": 3, "2L-2": 4,
@@ -24,7 +31,6 @@ tone_score_map = {
     "5M-1": 24, "5M-2": 25
 }
 
-# スコアから見た目年齢補正
 def tone_to_age_offset(score):
     if score <= 2: return -5
     elif score <= 4: return -4
@@ -38,7 +44,6 @@ def tone_to_age_offset(score):
     elif score == 24: return 4
     else: return 5
 
-# 質問と理想回答
 question_map = {
     "ホワイトニングをしたことがある": "はい",
     "カレーやトマトなど色の濃い食べ物が好き": "いいえ",
@@ -47,7 +52,6 @@ question_map = {
     "年齢と共に歯が黄ばんできたと感じる": "いいえ"
 }
 
-# ランク別アドバイス
 advice_comments = {
     "S": "素晴らしい！誰もがうらやむ美しい歯をお持ちですね。でも、油断は禁物です。\n"
          "放っておくと少しずつ着色していってしまうので、月1回のメンテナンスで清潔感をキープしましょう！",
@@ -62,7 +66,6 @@ advice_comments = {
          "でも、諦めることはありません！集中的なケアで見違えるほど印象をアップできます！"
 }
 
-# UI：フォーム
 st.title("第一印象トーン診断")
 with st.form("diagnosis_form"):
     tone_selected = st.selectbox("歯のトーンを選んでください", list(tone_score_map.keys()))
@@ -70,7 +73,6 @@ with st.form("diagnosis_form"):
     responses = {q: st.radio(q, ("はい", "いいえ"), key=q) for q in question_map}
     submitted = st.form_submit_button("診断する")
 
-# 診断ロジック
 if submitted:
     with st.spinner("診断中... あなたの印象を分析しています"):
         progress = st.progress(0)
@@ -98,12 +100,10 @@ if submitted:
     else:
         rank = "D"
 
-    # 結果表示
     st.subheader("診断結果")
     st.write(f"選択された歯のトーン: {tone_selected}（スコア: {tone_score}）")
     st.write(f"見た目年齢：実年齢 {age} → {visual_age} 歳")
 
-    # 棒グラフ
     fig, ax = plt.subplots()
     ax.barh(["清潔感レベル", "ホワイトニング緊急性", "メンテナンス必要度"],
             [cleanliness, urgency, maintenance], color='skyblue')
@@ -111,12 +111,10 @@ if submitted:
     ax.set_xlabel("10段階評価")
     st.pyplot(fig)
 
-    # 総合評価＆アドバイス
     st.markdown(f"### 総合評価ランク：{rank}")
     st.info(advice_comments[rank])
 
-    # LINE誘導ボタン（仮リンク）
-    st.markdown("### 📩 診断結果をLINEで送りたい方はこちら")
-    line_url = "https://lin.ee/xxxxxxxx"  # ←あなたのLINE公式URLに変更
+    st.markdown("### \U0001F4E9 診断結果をLINEで送りたい方はこちら")
+    line_url = "https://lin.ee/E2rHbd6"  # ご自身のLINE公式URLに差し替えてください
     if st.button("LINEで診断結果を送る"):
         st.markdown(f'<meta http-equiv="refresh" content="0; URL={line_url}">', unsafe_allow_html=True)
