@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import time
 
 # ページ設定
@@ -74,7 +75,7 @@ if submitted:
     age_offset = tone_to_age_offset(tone_score)
     visual_age = age + age_offset
 
-    # 線形に10段階スケーリング（より滑らかに）
+    # スコア変換（滑らかな10段階）
     cleanliness = max(1, round(10 - tone_score * 10 / 25))
     urgency = min(10, round(tone_score * 10 / 25))
     correct = sum([1 for q, a in responses.items() if a == question_map[q]])
@@ -96,7 +97,7 @@ if submitted:
     st.write(f"選択された歯のトーン: {tone_selected}（スコア: {tone_score}）")
     st.write(f"見た目年齢：実年齢 {age} → {visual_age} 歳")
 
-    # Plotlyで横棒グラフ
+    # 棒グラフ（Plotly 横）
     chart_data = pd.DataFrame({
         "項目": ["清潔感", "緊急性", "メンテ必要性"],
         "スコア": [cleanliness, urgency, maintenance]
@@ -105,6 +106,39 @@ if submitted:
     fig.update_traces(marker_color='skyblue', textposition='outside')
     fig.update_layout(xaxis_title="10段階評価", yaxis_title="", height=400)
     st.plotly_chart(fig)
+
+    # トーン位置可視化バー（グラデーション）
+    st.markdown("### あなたのトーンレベル")
+    tone_levels = list(range(1, 26))
+    tone_colors = [
+        f"rgba({int(0 + (c/24)*180)}, {int(120 + (c/24)*80)}, {int(255 - (c/24)*155)}, 0.9)"
+        for c in range(25)
+    ]
+    fig_tone = go.Figure()
+    fig_tone.add_trace(go.Bar(
+        x=tone_levels,
+        y=[1]*25,
+        marker_color=tone_colors,
+        hoverinfo='x',
+        showlegend=False,
+        width=0.8,
+    ))
+    fig_tone.add_trace(go.Scatter(
+        x=[tone_score],
+        y=[1.2],
+        mode="markers+text",
+        marker=dict(color="red", size=12),
+        text=[f"あなたの位置: {tone_score}/25"],
+        textposition="top center",
+        showlegend=False
+    ))
+    fig_tone.update_layout(
+        height=200,
+        xaxis=dict(title="トーンレベル（明るい→暗い）", tickmode="linear", dtick=1),
+        yaxis=dict(visible=False),
+        margin=dict(l=40, r=40, t=30, b=30)
+    )
+    st.plotly_chart(fig_tone)
 
     st.markdown(f"### 総合評価ランク：{rank}")
     st.info(advice_comments[rank])
